@@ -82,6 +82,7 @@ def manhattan(u,v):
     return abs(x1-x2) + abs(y1-y2)
 
 
+
 if __name__ == "__main__":
     # Some examples:
     grid_S = MAPPState([(0,0),(1,1),(0,1),(1,0)],nrows=5,ncols=5,walls=[])
