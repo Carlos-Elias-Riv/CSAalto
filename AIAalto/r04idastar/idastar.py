@@ -55,14 +55,15 @@ def doDFS(s,g,bound,goaltest,h,path):
         return fvalue
     # esta resuelto
     if goaltest(s):
-        result = []
-        for pos in range(len(path)):
-            if pos < len(path) - 1:
-                for action, s in path[pos].successors():
-                    if path[pos + 1] == s:
-                        result.append(action)
+        # result = []
+        # for pos in range(len(path)):
+        #     if pos < len(path) - 1:
+        #         for action, s in path[pos].successors():
+        #             if path[pos + 1] == s:
+        #                 result.append(action)
 
-        return result
+        # return result
+        return path
 
     sucesores = s.successors()
     min = inf
