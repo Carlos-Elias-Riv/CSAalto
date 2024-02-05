@@ -75,17 +75,28 @@ def doDFS(s,g,bound,goaltest,h,path):
             fprime = doDFS(state, g + action.cost, bound, goaltest, h, copia)
             # esto significa que lo resolvió
             if isinstance(fprime, list):
-                if isinstance(fprime[0], Action):
-                    return fprime
-                else:
+                # if isinstance(fprime[0], Action):
+                #     return fprime
+                # else:
+                #     result = []
+                #     for pos in range(len(fprime)):
+                #         if pos < len(fprime) - 1:
+                #             for action, s in fprime[pos].successors():
+                #                 if fprime[pos + 1] == s:
+                #                     result.append(action)
+
+                #     return result
+                try: 
                     result = []
                     for pos in range(len(fprime)):
                         if pos < len(fprime) - 1:
                             for action, s in fprime[pos].successors():
                                 if fprime[pos + 1] == s:
                                     result.append(action)
-
                     return result
+                except: 
+                    return fprime
+
             if fprime is None:
                 return None
             if isinstance(fprime, int) and fprime < min:
