@@ -55,52 +55,26 @@ def doDFS(s,g,bound,goaltest,h,path):
         return fvalue
     # esta resuelto
     if goaltest(s):
-        # result = []
-        # for pos in range(len(path)):
-        #     if pos < len(path) - 1:
-        #         for action, s in path[pos].successors():
-        #             if path[pos + 1] == s:
-        #                 result.append(action)
-
-        # return result
-        return path
+       
+        return []
 
     sucesores = s.successors()
     min = inf
     for action,state in sucesores:
         # esto es como si tomara esa accion
         if not state in path:
-            copia = path.copy()
-            copia.append(state)
-            fprime = doDFS(state, g + action.cost, bound, goaltest, h, copia)
+            path.append(state)
+            fprime = doDFS(state, g + action.cost, bound, goaltest, h, path)
             # esto significa que lo resolvió
             if isinstance(fprime, list):
-                # if isinstance(fprime[0], Action):
-                #     return fprime
-                # else:
-                #     result = []
-                #     for pos in range(len(fprime)):
-                #         if pos < len(fprime) - 1:
-                #             for action, s in fprime[pos].successors():
-                #                 if fprime[pos + 1] == s:
-                #                     result.append(action)
-
-                #     return result
-                try: 
-                    result = []
-                    for pos in range(len(fprime)):
-                        if pos < len(fprime) - 1:
-                            for action, s in fprime[pos].successors():
-                                if fprime[pos + 1] == s:
-                                    result.append(action)
-                    return result
-                except: 
-                    return fprime
-
+                fprime.insert(0,action)
+                return fprime
             if fprime is None:
                 return None
             if isinstance(fprime, int) and fprime < min:
                 min = fprime
+
+            path.remove(state)
 
     return min
 
