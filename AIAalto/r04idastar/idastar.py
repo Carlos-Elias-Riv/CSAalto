@@ -55,28 +55,32 @@ def doDFS(s,g,bound,goaltest,h,path):
         return fvalue
     # esta resuelto
     if goaltest(s):
-       
         return []
 
     sucesores = s.successors()
     min = inf
-    for action,state in sucesores:
-        # esto es como si tomara esa accion
-        if not state in path:
-            path.append(state)
-            fprime = doDFS(state, g + action.cost, bound, goaltest, h, path)
-            # esto significa que lo resolvió
-            if isinstance(fprime, list):
-                fprime.insert(0,action)
-                return fprime
-            if fprime is None:
-                return None
-            if isinstance(fprime, int) and fprime < min:
-                min = fprime
+    if sucesores is not None:
+        for action,state in sucesores:
+            # esto es como si tomara esa accion
+            if path is not None:
+                if state not in path:
+                    path.append(state)
+                    fprime = doDFS(state, g + action.cost, bound, goaltest, h, path)
+                    # esto significa que lo resolvió
+                    if isinstance(fprime, list):
+                        fprime.insert(0,action)
+                        return fprime
+                    if fprime is None:
+                        return None
+                    if isinstance(fprime, int):
+                        if fprime < min:
+                            min = fprime
 
-            path.remove(state)
+                    path.remove(state)
 
-    return min
+        return min
+    
+    
 
 
 
