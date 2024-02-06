@@ -68,8 +68,8 @@ def doDFS(s,g,bound,goaltest,h,path):
             if isinstance(fprime, list):
                 fprime.insert(0,action)
                 return fprime
-            if fprime is None:
-                return None
+            # if fprime is None:
+            #     return None
             if isinstance(fprime, int) and fprime < min:
                 min = fprime
 
@@ -77,23 +77,3 @@ def doDFS(s,g,bound,goaltest,h,path):
 
     return min
 
-
-
-
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-### Write your code here
-
-### NOTE: The grader will call both IDAstar and doDFS, so keep
-### the interfaces to these intact. (We need to check doDFS
-### separately because otherwise you could plug in your A*
-### implementation as an IDA* impersonation. ;-) )
