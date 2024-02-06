@@ -68,10 +68,11 @@ def doDFS(s,g,bound,goaltest,h,path):
             if isinstance(fprime, list):
                 fprime.insert(0,action)
                 return fprime
-            # if fprime is None:
-            #     return None
-            if isinstance(fprime, int) and fprime < min:
+            if fprime is None:
+                return None
+            if fprime < min:
                 min = fprime
+            
 
             path.remove(state)
 
