@@ -47,8 +47,7 @@ def IDAstar(s0,goaltest,h):
 
 def doDFS(s,g,bound,goaltest,h,path):
     global totalcalls
-    visited = {}
-    visited[s] = True
+    
     totalcalls = totalcalls + 1
     if totalcalls > 10000000:
         return None
@@ -58,12 +57,11 @@ def doDFS(s,g,bound,goaltest,h,path):
     # esta resuelto
     if goaltest(s):
         return []
-    sucesores = s.successors()
-    min = inf
     
-    for action,state in sucesores:
+    min = inf
+    for action,state in s.successors():
         # esto es como si tomara esa accion
-        if state not in visited:
+        if not state in path:
             path.append(state)
             fprime = doDFS(state, g + action.cost, bound, goaltest, h, path)
             # esto significa que lo resolvió
@@ -72,15 +70,12 @@ def doDFS(s,g,bound,goaltest,h,path):
                 return fprime
             if fprime is None:
                 return None
-            if isinstance(fprime, int):
-                if fprime < min:
-                    min = fprime
+            if isinstance(fprime, int) and fprime < min:
+                min = fprime
 
             path.remove(state)
 
     return min
-    
-    
 
 
 
