@@ -13,7 +13,7 @@
 
 # The universe
 
-{ Jack, John, Anne, Mary, Carlos }
+{ Jack, John, Anne, Mary }
 
 # Next you define the meanings of the predicates. Each predicate is associated with
 # a set (1-place relation) or a relation (one or more places/columns) over the universe.
@@ -24,21 +24,16 @@
 
 # The predicates
 
-connect / 2 = { (Jack, Jack), (Jack, John), (John, Mary), (Mary, Jack), (Jack, Carlos) }
+connect / 2 = { (Jack, Jack), (Jack, John), (John, Mary), (Mary, Jack) }
 
 P / 1 = { Jack, John }
 
-# parent / 2 = { (Jack,Mary), (Jack,John), (Carlos,Mary), (Carlos,John) }
-# grandparent / 2 = { (Jack,Anne), (Carlos,Anne)}
-# sibling / 2 = { (Jack,Carlos), (Carlos,Jack)}
-# male / 1 = { Jack, John, Carlos }
-# female / 1 = { Anne, Mary }
-# father / 1 = { Jack }
 
-parent / 2 = { (1,0), (2,0), (2,1), (4,0), (4,1) }
-grandparent / 2 = { (2,3), (4,3)}
-sibling / 2 = { (2,4), (4,2)}
-male / 1 = { 2, 1, 4 }
+
+parent / 2 = { (1,0), (2,0), (2,1) }
+grandparent / 2 = { (2,3) }
+sibling / 2 = { (1,0), (0,1)}
+male / 1 = { 2, 1 }
 female / 1 = { 3, 0 }
 father / 1 = { 2 }
 
@@ -52,7 +47,7 @@ Mary = 0
 John = 1
 Jack = 2
 Anne = 3
-Carlos = 4
+
 
 # Hint: Since the predicates and constants about family relations are
 # disjoint from the ones in graphs/connections, you can freely choose if
