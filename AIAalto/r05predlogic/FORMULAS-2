@@ -8,28 +8,30 @@
 #
 # Requirement: use predicates likes, happy
 #
-
+exists x (likes(x, x) & happy(x))
 #
 # Formula 2
 #
 # Requirement: use predicates happy, calm
 #
-
+forall x (happy(x) => not calm(x))
 #
 # Formula 3
 #
 # Requirement: use predicates calm, owesmoneyto 
 #
-
+forall x forall y ((owesmoneyto(x, y) => x != y) | calm(x))
 #
 # Formula 4
 #
 # Requirement: use predicates hasmuchmoremoney, happy
 #
 
+forall x (happy(x) => exists y (hasmuchmoremoney(y, x)))
+
 #
 # Formula 5
 #
 # Requirement: use predicates hasmuchmoremoney, likes
 #
-
+exists x (forall y ((not ((not likes(x,y)) or hasmuchmoremoney(x,y)))))
