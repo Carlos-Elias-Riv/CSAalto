@@ -40,10 +40,14 @@ def instantiate(f,t):
 
 def findPlan(source,transition,target,MAX : int):
     # T is the last time point considered.
+    source = instantiate(source,0)
     for T in range(0,MAX+1):
         #### YOUR CODE HERE
         #### YOUR CODE HERE
-        formula = None
+        temptransits = []
+        for t in range(T):
+            temptransits.append(instantiate(transition,t))
+        formula = AND([source] + temptransits + [instantiate(target,T)])
         SAT, assignment, runtime = solve(formula)
         if SAT:
             return (T,assignment)
