@@ -77,13 +77,21 @@ exactly 2 (t : teachers) CanTeach(t,swedish1);
 # Hint: Each constraint is one line, or a couple of lines long only.
 
 # 1. Teacher of a class must be one qualified to teach it
-forall (c: courses, t: teachers, g: groups) ClassTeacher(c, g, t) -> CanTeach(t, c);
+forall (c: courses, t: teachers, g: groups) 
+    (ClassTeacher(c, g, t) -> CanTeach(t, c));
+
 # 2. Teacher in only one class at a time.
-forall (t: teachers, d: days, s: times) atmost 1 (c: courses, g: groups) (ClassTeacher(c, g, t) and ClassDay(c, g, d) and ClassTime(c, g, s));
+forall (t: teachers, d: days, s: times) 
+    atmost 1 (c: courses, g: groups) 
+        (ClassTeacher(c, g, t) and ClassDay(c, g, d) and ClassTime(c, g, s));
 # 3. Group having only one class at a time.
-forall (g: groups, c: courses, d: days, s: times) atmost 1 (t: teachers) (ClassTeacher(c, g, t) and ClassDay(c, g, d) and ClassTime(c, g, s));
+forall (g: groups, d: days, s: times)
+  atmost 1 (c: courses)
+    (ClassDay(c, g, d) and ClassTime(c, g, s));
 # 4. Every group has for every class a unique day, time, teacher.
-forall (c: courses, g: groups) exactly 1 (d: days, s: times, t: teachers) (ClassTeacher(c, g, t) and ClassDay(c, g, d) and ClassTime(c, g, s));
+forall (c: courses, g: groups) 
+    exactly 1 (d: days, s: times, t: teachers) 
+        (ClassTeacher(c, g, t) and ClassDay(c, g, d) and ClassTime(c, g, s));
 
 
 # 1. Teacher of a class must be one qualified to teach it
