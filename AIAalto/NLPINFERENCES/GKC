@@ -19,7 +19,7 @@ sub quote {
 
 if(($ARGV[0] cmp "") != 0) {
     $tptpfilename = $ARGV[$i];
-    @tptprun = `./gkc $tptpfilename`;
+    @tptprun = `./gkc1 $tptpfilename`;
 
     $prooffound = 0;
 
