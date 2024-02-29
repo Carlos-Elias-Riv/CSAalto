@@ -396,7 +396,7 @@ class FORALL:
             # exit(1)
             universo = ATOM("U",[Var(self.var)])
             
-            return RAdivision(universo.fma2RA(dbschema),self.subformula.fma2RA(dbschema))
+            return RAdivision(self.subformula.fma2RA(dbschema), universo.fma2RA(dbschema))
 ###### IMPLEMENT THIS
 ###### IMPLEMENT THIS
 
