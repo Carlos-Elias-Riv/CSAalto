@@ -119,5 +119,9 @@ last move. Your backtracking tree-search methods should do the same.
 A Monte Carlo search (MCS) agent does not backtrack, so there is
 no need to use 'undo_last_move'.
 
+WHITE and BLACK for the Unicode display of the board is to be
+understood when the characters are black on a white background.
+If you have a terminal window with a dark background and white
+characters, then the colors are of course the wrong way around.
 
 GL HF :)

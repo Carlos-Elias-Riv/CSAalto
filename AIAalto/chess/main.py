@@ -9,6 +9,7 @@ from agent_interface import AgentInterface
 from random_agent import RandomAgent
 from minimax_agent import MinimaxAgent
 from mcs_agent import MCSAgent
+from id_minimax_agent import IDMinimaxAgent
 # from agent import Agent    # After completing your agent, you can uncomment this line
 
 
@@ -18,7 +19,11 @@ from mcs_agent import MCSAgent
 
 def main():
     ############### Set the players ###############
-    players = [MinimaxAgent, MinimaxAgent]
+    #players = [MinimaxAgent, MinimaxAgent]
+    #players = [MinimaxAgent, RandomAgent]
+    #players = [IDMinimaxAgent, MinimaxAgent]
+    players = [IDMinimaxAgent, MCSAgent]
+    #players = [MinimaxAgent, IDMinimaxAgent]
     #players = [MinimaxAgent, MCSAgent]
     #players = [RandomAgent, MCSAgent]
     #players = [RandomAgent, MinimaxAgent]
@@ -39,7 +44,7 @@ def main():
 
         for round in range(len(players)):
             print( "########################################################")
-            print("#{: ^54}#".format(f"ROUND {round}"))
+            print("#{: ^54}#".format(f"ROUND {i} {round}"))
             print( "########################################################")
             print( player_name(players[0]) + " is playing WHITE.")
             print( player_name(players[1]) + " is playing BLACK.")
@@ -74,6 +79,9 @@ def main():
 
 def player_name(player: Type[AgentInterface]):
     return player().info()['agent name']
+
+import cProfile
+import re
 
 
 if __name__ == "__main__":

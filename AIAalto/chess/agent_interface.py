@@ -1,6 +1,5 @@
 from envs.environment import AbstractState
 
-
 class AgentInterface:
     """
     The interface of an Agent

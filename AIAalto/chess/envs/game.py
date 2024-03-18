@@ -72,6 +72,8 @@ class State(AbstractState):
         self.maxX = maxX
         self.maxY = maxY
 
+    # Current player
+
     def current_player(self) -> int:
         if self.board.turn == chess.WHITE:
             return 0
@@ -88,20 +90,49 @@ class State(AbstractState):
         ranks = s.split("\n")
         visibleRanks = list(enumerate(ranks[7-self.maxY:]))
         # Return maxX prefixes of maxY rows/ranks
-        return '\n'.join([ "  abcdefgh"[:(self.maxX)*2]] + [ str(self.maxX+2-i) + " " + s[:(self.maxX+1)*2] for i,s in visibleRanks ])
+        return '\n'.join([ "  abcdefgh"[:(self.maxX)*2]] + [ str(self.maxX+1-i) + " " + s[:(self.maxX+1)*2] for i,s in visibleRanks ])
 
+    def __str2__(self) -> str:
+        # Empty board
+        board = [["." for x in range(0,self.maxX+1)] for y in range(0,self.maxY+1) ]
+        # Map Square -> Piece
+        pieces = self.board.piece_map()
+        # Set all pieces on board
+        for s in pieces:
+            x = chess.square_file(s)
+            y = chess.square_rank(s)
+            board[y][x] = pieces.get(s).symbol()
+        visibleRanks = list(enumerate([ "".join(l) for l in board ]))
+        return '\n'.join([ " abcdefgh"[:(self.maxX)+2]] + [ str(self.maxX+1-i) + s[:(self.maxX+1)*2] for i,s in visibleRanks ])
 
-    # Is somebody the winner? 1 for current player, -1 for opponent
+    # Is somebody the winner? 1 for current player, -1 for opponent, 0 for draw,
+    # None for game is still on.
 
     def is_winner(self) -> Optional[int]:
+        # Try python-chess winner determination:
+        # (Winning on 8 X 8 board implies win also on smaller boards!)
         outc = self.board.outcome()
-        if outc == None:
-            return None
-        if outc.winner == chess.WHITE and self.board.turn == chess.WHITE:
-            return 1
-        else:
-            return -1
+        if outc != None and (outc.winner == chess.WHITE or outc.winner == chess.BLACK):
+            if outc.winner == self.board.turn:
+                return 1
+            else:
+                return -1
+        # There may still be Stalemate or Checkmate on the smaller board. Check!
+        # First check for Checkmate:
+        if self.checkmate(): return -1
+        # Then check for Stalemate:
+        if self.stalemate(): return 0
+        return None
 
+    # Checkmate? King threatened, and no legal move out of the situation?
+    
+    def checkmate(self) -> bool:
+        return self.board.is_check() and all( not self.withinBounds(m) for m in self.board.legal_moves )
+
+    # Stalemate? All legal moves lead to being in check.
+    
+    def stalemate(self) -> bool:
+        return (not self.board.is_check()) and all( not self.withinBounds(m) for m in self.board.legal_moves )
 
     # Test if move is within bounds 0..maxX, 0..maxY
 

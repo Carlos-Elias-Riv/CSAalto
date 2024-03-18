@@ -1,6 +1,6 @@
 import random
 from agent_interface import AgentInterface
-from envs.game import State, ID
+from envs.game import State
 
 import chess
 
@@ -21,17 +21,16 @@ class MinimaxAgent(AgentInterface):
     # on both sides, and gives the Queen a higher weight.
 
     def heuristic(self, state: State):
-        id = state.current_player_id
-        if id == 0:
+        if state.current_player() == 0:
             COLOR = chess.WHITE
             otherCOLOR = chess.BLACK
         else:
-            COLOR = chess.WHITE
-            otherCOLOR = chess.BLACK
+            COLOR = chess.BLACK
+            otherCOLOR = chess.WHITE
 
         knights = state.board.pieces(chess.KNIGHT,COLOR)
         bishops = state.board.pieces(chess.BISHOP,COLOR)
-        queens = state.board.pieces(chess.QUEEN,otherCOLOR)
+        queens = state.board.pieces(chess.QUEEN,COLOR)
 
         Oknights = state.board.pieces(chess.KNIGHT,otherCOLOR)
         Obishops = state.board.pieces(chess.BISHOP,otherCOLOR)
@@ -58,7 +57,6 @@ class MinimaxAgent(AgentInterface):
             if action_value > max_value:
                 max_value = action_value
                 best_action = action
-                yield best_action
         yield best_action
 
     def max_value(self, state: State, depth: int):

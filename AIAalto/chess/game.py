@@ -30,30 +30,37 @@ class Game:
             if len(winners) != 1:
                 print("The game ended in a draw!")
             else:
-                print(f"Player {winners[0]}, {self.__players[winners[0]]} WON!")
+                if winners[0] == 0:
+                    s = "White"
+                else:
+                    s = "Black"
+                print(f"Player {s}, {self.__players[winners[0]]} WON!")
         return winners
 
     def __play(self, state: AbstractState, output, timeout_per_turn):
         duration = None
-        output = True
         if(output): print("Starting game!\n")
-        ROUNDS = 0
+        MOVES = 0
         while True:
             is_winner = state.is_winner()
             if is_winner is not None:
-                if(output): print("Game ends after " + str(ROUNDS) + " rounds\n")
-                if is_winner == 0:
+                if(output): print("Game ends after " + str(MOVES) + " moves\n")
+                if state.stalemate():
+                    if(output): print("Stalemate!")
                     return []
-                if is_winner == 1:
-                    return [state.current_player()]
-                return [1 - state.current_player()]
-            if ROUNDS > 200:
-                if(output): print("Played 200 rounds without a winner. Terminate.\n")
+                if state.checkmate():
+                    if(output): print("Player " + str(state.current_player()) + " lost: checkmate!")
+                    return [1 - state.current_player()]
+            if MOVES > 100:
+                if(output): print("Played 100 moves without a winner. Terminate.\n")
                 return []
-            # No moves = King's only moves are outside the board (but inside 8 X 8)
             moves = state.applicable_moves()
-            if len(moves) == 0:
-                return [1 - state.current_player()]
+            if output:
+                if state.current_player() == 0:
+                    print("Player: WHITE")
+                else:
+                    print("Player: BLACK")
+            if output: print("Possible moves:", len(moves))
             start_time = time.time()
             action = self.__get_action(self.__players[state.current_player()],
                                        state,
@@ -76,14 +83,13 @@ class Game:
                 print("Move:", action)
                 print("===================================================")
                 print(state)
-                print("Possible moves:", len(moves))
-            ROUNDS += 1
+            MOVES += 1
 
     def __get_action(self, player: AgentInterface, state, timeout):
         action = None
         try:
             with time_limit(timeout):
-                for decision in player.decide(deepcopy(state)):
+                for decision in player.decide(state.clone()):
                     action = decision
         except TimeoutError:
             pass
