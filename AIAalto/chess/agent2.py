@@ -5,7 +5,7 @@ from envs.game import State
 import chess
 
 
-class Agent(AgentInterface):
+class MiniAgent(AgentInterface):
     """
     An agent who plays Chess
 
@@ -43,6 +43,49 @@ class Agent(AgentInterface):
     
 
 
+
+    def evaluate_king_safety(self, state, color):
+        # Evaluate king safety by considering factors like pawn shield, proximity to the center, and attacking pieces
+        king_safety_score = 0
+        board = state.board
+        king_square = board.king(color)
+        
+        # Pawn shield
+        # pawn_shield_squares = chess.pawn_shield(color, king_square)
+        # pawn_shield_score = sum(1 for square in pawn_shield_squares if board.piece_at(square) == chess.PAWN)
+        # king_safety_score += pawn_shield_score * 5
+        
+        # Proximity to the center
+        center_distance = chess.square_distance(king_square, chess.C3)
+        king_safety_score -= center_distance
+        
+        # Attacking pieces
+        attackers = len(board.attackers(not color, king_square))
+        king_safety_score -= attackers
+        
+        return king_safety_score
+
+    def evaluate_center_control(self, state, color):
+        # Evaluate center control by considering the number of pieces controlling the center squares
+        center_control_score = 0
+        center_squares = [chess.E4, chess.D4, chess.E5, chess.D5]
+        board = state.board
+        for square in center_squares:
+            if board.piece_at(square) and board.piece_at(square).color == color:
+                center_control_score += 1
+        return center_control_score
+
+    def evaluate_initiative(self, state, color):
+        # Evaluate initiative by counting the number of attacks launched by the deciding agent
+        board = state.board
+        initiative_score = 0
+        for move in board.legal_moves:
+            if board.is_capture(move) and board.piece_at(move.from_square).color == color:
+                initiative_score += 1
+        return initiative_score
+
+
+
     def heuristic(self, state: State, deciding_agent: int):
         if deciding_agent == 0:
             COLOR = chess.WHITE
@@ -52,7 +95,6 @@ class Agent(AgentInterface):
             otherCOLOR = chess.WHITE
 
         piece_values = {
-            chess.PAWN: 1,
             chess.KNIGHT: 3,
             chess.BISHOP: 3,
             chess.ROOK: 5,
@@ -68,15 +110,19 @@ class Agent(AgentInterface):
                 len(state.board.pieces(piece_type, otherCOLOR)) * piece_values[piece_type]
                 
             )
-        CENTER_SQUARES = [chess.E4, chess.E5, chess.D4, chess.D5, chess.C4, chess.C5, chess.F4, chess.F5]
+        #CENTER_SQUARES = [chess.E4, chess.E5, chess.D4, chess.D5, chess.C4, chess.C5, chess.F4, chess.F5]
 
         pawns_controlled = 0#len(state.board.pawns(COLOR)) - len(state.board.pawns(otherCOLOR))
-        center_squares_controlled = sum(1 for sq in chess.SQUARES if sq in CENTER_SQUARES and state.board.piece_at(sq) is not None)
-
+        initiative = self.evaluate_initiative(state, COLOR)
+        #center_squares_controlled = sum(1 for sq in chess.SQUARES if sq in CENTER_SQUARES and state.board.piece_at(sq) is not None)
+        center_squares_controlled = self.evaluate_center_control(state, COLOR)
         num_pinned_pieces = 0#len(self.get_pinned_pieces(state, COLOR))
         num_attacked_squares = len(state.board.attacks(COLOR)) - len(state.board.attacks(otherCOLOR))
+        #print(f'num_attacked_squares: {num_attacked_squares}')
+        king_safety = self.evaluate_king_safety(state, COLOR)
+        other_king_safety = self.evaluate_king_safety(state, otherCOLOR)
 
-        heuristic = material_score*.7 + .1*(pawns_controlled - pawns_controlled//2) + .1*center_squares_controlled - num_pinned_pieces*(.2) + .1*num_attacked_squares
+        heuristic = material_score*.7  + .1*center_squares_controlled - num_pinned_pieces*(.2) + .1*num_attacked_squares + king_safety*.6 - other_king_safety*.6
 
         return heuristic
 
@@ -161,14 +207,19 @@ class Agent(AgentInterface):
         deciding = state.current_player() # Which agent's decision this is?
         ## lets order the moves, to make a more informed decision
         moves = state.applicable_moves()
-        mapping_moves = [move for move in moves]
-        resultingstates = [state.clone().execute_move(move) for move in moves]
-        print(resultingstates)
-        #states_values = [self.heuristic(state, deciding) for state in resultingstates]
-        #moves = sorted(moves, key=lambda move: self.heuristic(mapping_moves[move],deciding))
+        
+        resultingstates = [state.clone() for _ in range(len(moves))]
+        for i, move in enumerate(moves):
+            resultingstates[i].execute_move(move)
+        states_values = [self.heuristic(state, deciding) for state in resultingstates]
+        # lets find the index of the best move
+        #best_move_index = states_values.index(max(states_values))
+        # lets sort the moves
+        moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=True)]
         #random.shuffle(moves)
         alpha = float('-inf')
         beta = float('inf')
+        #best_action = moves[best_move_index]
         best_action = moves[0]
         max_value = float('-inf')
         for action in moves:
@@ -216,16 +267,26 @@ class Agent(AgentInterface):
 
         # If it is not terminated
         moves = state.applicable_moves()
+        
+        resultingstates = [state.clone() for _ in range(len(moves))]
+        for i, move in enumerate(moves):
+            resultingstates[i].execute_move(move)
+        states_values = [self.heuristic(state, deciding) for state in resultingstates]
+        # lets find the index of the best move
+        #best_move_index = states_values.index(max(states_values))
+        # lets sort the moves
+        moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=True)]
         value = float('-inf')
         for action in moves:
             state.execute_move(action)
             value = max(value, self.min_value(state, depth - 1,deciding, alpha, beta))
             state.undo_last_move()
-            if value >= beta:
+            alpha = max(alpha, value)
+            if alpha >= beta:
                 #print('i did alpha beta pruning')
                 break
 
-            alpha = max(alpha, value)
+            
         return value
 
 
@@ -259,14 +320,37 @@ class Agent(AgentInterface):
 
         # If it is not terminated
         moves = state.applicable_moves()
+        
+        resultingstates = [state.clone() for _ in range(len(moves))]
+        for i, move in enumerate(moves):
+            resultingstates[i].execute_move(move)
+        states_values = [self.heuristic(state, deciding) for state in resultingstates]
+        # lets find the index of the best move
+        #best_move_index = states_values.index(max(states_values))
+        # lets sort the moves
+        moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=False)]
         value = float('inf')
         for action in moves:
             state.execute_move(action)
             value = min(value, self.max_value(state, depth - 1,deciding, alpha, beta))
             state.undo_last_move()
-            if value <= alpha:
-                #print('i did alpha beta pruning')
+            beta = min(value, beta)
+            if alpha >= beta:
                 break
-            beta = min(beta, value)
+            
         return value
 
+class Agent(AgentInterface):
+    def __init__(self, *args, **kwargs):
+        MAX_DEPTH = 100
+        self.__agents = list()
+        for depth in range(1, MAX_DEPTH):
+            self.__agents.append(MiniAgent(*args, depth=depth, **kwargs))
+
+    def info(self):
+        return {'agent name': f'ID-{self.__agents[0].info()["agent name"]}'}
+
+    def decide(self, *args, **kwargs):
+        for agent in self.__agents:
+            for decision in agent.decide(*args, **kwargs):
+                yield decision
