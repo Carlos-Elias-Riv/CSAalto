@@ -50,15 +50,6 @@ class MiniAgent(AgentInterface):
         board = state.board
         king_square = board.king(color)
         
-        # Pawn shield
-        # pawn_shield_squares = chess.pawn_shield(color, king_square)
-        # pawn_shield_score = sum(1 for square in pawn_shield_squares if board.piece_at(square) == chess.PAWN)
-        # king_safety_score += pawn_shield_score * 5
-        
-        # Proximity to the center
-        center_distance = chess.square_distance(king_square, chess.C3)
-        king_safety_score -= center_distance
-        
         # Attacking pieces
         attackers = len(board.attackers(not color, king_square))
         king_safety_score -= attackers
@@ -68,7 +59,7 @@ class MiniAgent(AgentInterface):
     def evaluate_center_control(self, state, color):
         # Evaluate center control by considering the number of pieces controlling the center squares
         center_control_score = 0
-        center_squares = [chess.E4, chess.D4, chess.E5, chess.D5]
+        center_squares = [chess.B3, chess.C3, chess.D3]
         board = state.board
         for square in center_squares:
             if board.piece_at(square) and board.piece_at(square).color == color:
@@ -84,6 +75,56 @@ class MiniAgent(AgentInterface):
                 initiative_score += 1
         return initiative_score
 
+    def evaluate_mobility(self, state, color):
+        # Evaluate mobility by counting the number of legal moves available for each piece
+        mobility_score = 0
+        board = state.board
+        
+        # Get all the legal moves for the current player
+        legal_moves = list(board.generate_legal_moves())
+        
+        # Iterate over all squares on the board
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            # Check if the piece exists and belongs to the current player's color
+            if piece is not None and piece.color == color:
+                # Count the legal moves for the current piece
+                for move in legal_moves:
+                    if move.from_square == square:
+                        mobility_score += 1
+        
+        return mobility_score
+    
+    def identify_opponent_weaknesses(self, state, color):
+        board = state.board
+        weaknesses_score = 0
+
+        # Undefended pieces
+        for square, piece in board.piece_map().items():
+            if piece.color != color:
+                # Check if the opponent's piece is undefended
+                if not board.is_attacked_by(color, square):
+                    weaknesses_score += 1
+
+        # Exposed king
+        opponent_king_square = board.king(not color)
+        if board.is_attacked_by(color, opponent_king_square):
+            weaknesses_score += 1
+        #print(weaknesses_score)
+        return weaknesses_score
+    
+    def evaluate_pinned_pieces(self, state, color):
+        board = state.board
+        pinned_pieces_score = 0
+        allcells = [chess.A1, chess.A2, chess.A3, chess.A4, chess.A5, chess.B1, chess.B2, chess.B3, chess.B4, chess.B5, chess.C1, chess.C2, chess.C3, chess.C4, chess.C5, chess.D1, chess.D2, chess.D3, chess.D4, chess.D5, chess.E1, chess.E2, chess.E3, chess.E4, chess.E5]
+        for square in allcells:
+            if board.pin(color, square):
+                pinned_pieces_score += 1
+
+        return pinned_pieces_score
+    
+
+
 
 
     def heuristic(self, state: State, deciding_agent: int):
@@ -95,34 +136,77 @@ class MiniAgent(AgentInterface):
             otherCOLOR = chess.WHITE
 
         piece_values = {
-            chess.KNIGHT: 3,
-            chess.BISHOP: 3,
-            chess.ROOK: 5,
-            chess.QUEEN: 9,
-            chess.KING: 100
+            chess.KNIGHT: 10,
+            chess.BISHOP: 10,
+            chess.QUEEN: 100,
+            chess.KING: 1000
         }
 
+        
+
         material_score = 0
+        # Piece-Square Tables
+        piece_square_tables = {
+            chess.KNIGHT: [
+                -5, -4, -3, -4, -5,
+                -4, -2, 0, -2, -4,
+                -3, 0, 1, 0, -3,
+                -4, -2, 0, -2, -4,
+                -5, -4, -3, -4, -5
+            ],
+            chess.BISHOP: [
+                -2, -1, 0, -1, -2,
+                -1, 1, 1.5, 1, -1,
+                0, 1.5, 2, 1.5, 0,
+                -1, 1, 1.5, 1, -1,
+                -2, -1, 0, -1, -2
+            ],
+            # Add tables for other pieces as needed
+        }
+
+        piece2piece_type = {
+            2: chess.BISHOP,
+            3: chess.KNIGHT,
+
+        }
 
         for piece_type in piece_values:
             material_score += ( 
-                len(state.board.pieces(piece_type, COLOR)) * piece_values[piece_type] - 
+                len(state.board.pieces(piece_type, COLOR)) * piece_values[piece_type]*1.3 - 
                 len(state.board.pieces(piece_type, otherCOLOR)) * piece_values[piece_type]
                 
             )
-        #CENTER_SQUARES = [chess.E4, chess.E5, chess.D4, chess.D5, chess.C4, chess.C5, chess.F4, chess.F5]
 
-        pawns_controlled = 0#len(state.board.pawns(COLOR)) - len(state.board.pawns(otherCOLOR))
+        # for square in state.board.piece_map():
+        #     piece = state.board.piece_at(square)
+        #     if piece is not None and piece.piece_type in piece2piece_type:
+        #         if piece.color == COLOR:
+
+        #             if square in range(len(piece_square_tables[piece2piece_type[piece.piece_type]])):
+        #                 material_score += piece_square_tables[piece2piece_type[piece.piece_type]][square]*.5
+
+        #         else:
+        #             if square in range(len(piece_square_tables[piece2piece_type[piece.piece_type]])):
+        #                 material_score -= piece_square_tables[piece2piece_type[piece.piece_type]][square]*.5
+
+        
+        
         initiative = self.evaluate_initiative(state, COLOR)
-        #center_squares_controlled = sum(1 for sq in chess.SQUARES if sq in CENTER_SQUARES and state.board.piece_at(sq) is not None)
+        
         center_squares_controlled = self.evaluate_center_control(state, COLOR)
-        num_pinned_pieces = 0#len(self.get_pinned_pieces(state, COLOR))
+        
         num_attacked_squares = len(state.board.attacks(COLOR)) - len(state.board.attacks(otherCOLOR))
-        #print(f'num_attacked_squares: {num_attacked_squares}')
-        king_safety = self.evaluate_king_safety(state, COLOR)
+        
         other_king_safety = self.evaluate_king_safety(state, otherCOLOR)
 
-        heuristic = material_score*.7  + .1*center_squares_controlled - num_pinned_pieces*(.2) + .1*num_attacked_squares + king_safety*.6 - other_king_safety*.6
+        opponents_weaknesses = self.identify_opponent_weaknesses(state, COLOR)
+        
+
+        mobility_score = self.evaluate_mobility(state, COLOR)
+        #print(material_score*.08, center_squares_controlled*.15, num_attacked_squares*.2, initiative*.15, mobility_score*.2, other_king_safety*.3, opponents_weaknesses*.35)
+        pinned_score = self.evaluate_pinned_pieces(state, COLOR)
+
+        heuristic = material_score*.15  + .15*center_squares_controlled  + .3*num_attacked_squares + initiative*.05 + mobility_score*.2 - other_king_safety*.33 + opponents_weaknesses*.3 + pinned_score*.2
 
         return heuristic
 
@@ -212,15 +296,17 @@ class MiniAgent(AgentInterface):
         for i, move in enumerate(moves):
             resultingstates[i].execute_move(move)
         states_values = [self.heuristic(state, deciding) for state in resultingstates]
-        # lets find the index of the best move
-        #best_move_index = states_values.index(max(states_values))
-        # lets sort the moves
-        moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=True)]
+        
+        map_state_values = {states_values[pos]: [moves[pos]] for pos in range(len(moves))}
+        # lets sort the map_state_values according to the keys
+        map_sorted = dict(sorted(map_state_values.items(), reverse = True))
         #random.shuffle(moves)
         alpha = float('-inf')
         beta = float('inf')
         #best_action = moves[best_move_index]
         best_action = moves[0]
+        best_action = list(map_sorted.values())[0][0]
+        moves = [x[0] for _, x in map_sorted.items()]
         max_value = float('-inf')
         for action in moves:
             state.execute_move(action)
@@ -259,8 +345,8 @@ class MiniAgent(AgentInterface):
         # Termination conditions
         winner = state.is_winner()
         if winner is not None:
-            if winner == 1: return 1000+(depth-self.depth) # Maximizing player wins
-            if winner == -1: return -1000-(depth-self.depth) # Minimizing palyer wins
+            if winner == 1: return 100000+(depth-self.depth) # Maximizing player wins
+            if winner == -1: return -100000-(depth-self.depth) # Minimizing palyer wins
             return 0 # Stalemate
         if depth == 0:
             return self.heuristic(state,deciding)
@@ -275,7 +361,11 @@ class MiniAgent(AgentInterface):
         # lets find the index of the best move
         #best_move_index = states_values.index(max(states_values))
         # lets sort the moves
-        moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=True)]
+        #moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=True)]
+        map_state_values = {states_values[pos]: [moves[pos]] for pos in range(len(moves))}
+        # lets sort the map_state_values according to the keys
+        map_sorted = dict(sorted(map_state_values.items(), reverse = True))
+        moves = [x[0] for _, x in map_sorted.items()]
         value = float('-inf')
         for action in moves:
             state.execute_move(action)
@@ -312,8 +402,8 @@ class MiniAgent(AgentInterface):
         # Termination conditions
         winner = state.is_winner()
         if winner is not None:
-            if winner == 1: return -1000-(depth-self.depth) # Minimizing player wins
-            if winner == -1: return 1000+(depth-self.depth) # Maximizing player wins
+            if winner == 1: return -100000-(depth-self.depth) # Minimizing player wins
+            if winner == -1: return 100000+(depth-self.depth) # Maximizing player wins
             return 0 # Stalemate
         if depth == 0:
             return self.heuristic(state,deciding)
@@ -328,7 +418,11 @@ class MiniAgent(AgentInterface):
         # lets find the index of the best move
         #best_move_index = states_values.index(max(states_values))
         # lets sort the moves
-        moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=False)]
+        #moves = [x for _, x in sorted(zip(states_values, moves), key=lambda pair: pair[0], reverse=False)]
+        map_state_values = {states_values[pos]: [moves[pos]] for pos in range(len(moves))}
+        # lets sort the map_state_values according to the keys
+        map_sorted = dict(sorted(map_state_values.items(), reverse = False))
+        moves = [x[0] for _, x in map_sorted.items()]
         value = float('inf')
         for action in moves:
             state.execute_move(action)
@@ -344,11 +438,11 @@ class Agent(AgentInterface):
     def __init__(self, *args, **kwargs):
         MAX_DEPTH = 100
         self.__agents = list()
-        for depth in range(1, MAX_DEPTH):
+        for depth in range(2, MAX_DEPTH):
             self.__agents.append(MiniAgent(*args, depth=depth, **kwargs))
 
     def info(self):
-        return {'agent name': f'ID-{self.__agents[0].info()["agent name"]}'}
+        return {'agent name': f'{self.__agents[0].info()["agent name"]}'}
 
     def decide(self, *args, **kwargs):
         for agent in self.__agents:
