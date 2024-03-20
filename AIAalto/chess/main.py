@@ -10,7 +10,7 @@ from random_agent import RandomAgent
 from minimax_agent import MinimaxAgent
 from mcs_agent import MCSAgent
 from id_minimax_agent import IDMinimaxAgent
-# from agent import Agent    # After completing your agent, you can uncomment this line
+from AIAalto.chess.agent import Agent    # After completing your agent, you can uncomment this line
 
 
 # If you want the reproducibility uncomment the following line
@@ -30,7 +30,7 @@ def main():
     #players = [RandomAgent, RandomAgent]
     #players = [MCSAgent, RandomAgent]
 
-    # players = [Agent, IDMinimaxAgent]   <-- Uncomment this to test your agent
+    players = [Agent, MinimaxAgent]   #<-- Uncomment this to test your agent
     ###############################################
 
     RENDER = True
