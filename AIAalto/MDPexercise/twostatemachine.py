@@ -58,7 +58,7 @@ class TwoStateMachine(mdp.MDP):
 
              (TwoStateMachine.States.prone, 
              TwoStateMachine.Actions.stand, 
-             TwoStateMachine.States.upright): 0,
+             TwoStateMachine.States.upright): 1,
 
              (TwoStateMachine.States.upright,
               TwoStateMachine.Actions.walk,
